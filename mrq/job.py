@@ -20,6 +20,7 @@ import linecache
 import fnmatch
 import encodings
 import copyreg
+import logging
 from . import context
 
 
@@ -680,7 +681,10 @@ def set_queues_size(size_by_queues, action="incr"):
             for queue in size_by_queues:
                 action_func("queuesize:%s" % queue, amount=size_by_queues[queue])
                 pipe.expire("queuesize:%s" % queue, context.get_current_config().get("queue_ttl"))
-            pipe.execute()
+            try:
+                pipe.execute()
+            except Exception as e:
+                logging.warning(f"Error with: {e}, not critical")
 
 def queue_jobs(main_task_path, params_list, queue=None, batch_size=1000):
     """ Queue multiple jobs on a regular queue """
